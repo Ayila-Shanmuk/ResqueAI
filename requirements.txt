@@ -4,3 +4,4 @@ joblib
 numpy
 pandas
 python-dotenv
+gunicorn

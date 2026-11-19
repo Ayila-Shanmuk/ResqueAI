@@ -20,7 +20,7 @@ from datetime import datetime
 
 import joblib
 import numpy as np
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 
 import auth
 
@@ -157,8 +157,8 @@ def random_nearby_point(lat, lon, radius_km=6):
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-@app.route("/")
-def index():
+@app.route("/legacy")
+def legacy_index():
     default_loc = HOSPITAL_DATA["default_location"]
     return render_template("index.html", default_loc=default_loc, models_loaded=MODELS_LOADED)
 
@@ -296,6 +296,25 @@ def api_emergency():
 @app.route("/api/health")
 def api_health():
     return jsonify({"status": "ok", "models_loaded": MODELS_LOADED})
+
+
+FRONTEND_DIST = os.path.join(APP_DIR, "frontend", "dist")
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path.startswith("api/"):
+        return jsonify({"error": "Endpoint not found"}), 404
+
+    if os.path.exists(FRONTEND_DIST):
+        target = os.path.join(FRONTEND_DIST, path)
+        if path and os.path.exists(target) and os.path.isfile(target):
+            return send_from_directory(FRONTEND_DIST, path)
+        return send_from_directory(FRONTEND_DIST, "index.html")
+
+    default_loc = HOSPITAL_DATA["default_location"]
+    return render_template("index.html", default_loc=default_loc, models_loaded=MODELS_LOADED)
 
 
 if __name__ == "__main__":
