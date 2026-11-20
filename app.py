@@ -37,6 +37,20 @@ except ImportError:
 app = Flask(__name__)
 auth.init_app(app)  # /api/auth/* login endpoints; guards the API only when REQUIRE_AUTH=1
 
+
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        return "", 204
+
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    return response
+
 # ---------------------------------------------------------------------------
 # Load trained models (run `python train_models.py` first if these are missing)
 # ---------------------------------------------------------------------------
